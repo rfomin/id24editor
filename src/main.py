@@ -1,5 +1,4 @@
 import sys
-from PySide6.QtCore import QStringListModel
 from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsScene
 from ui_mainwindow import Ui_MainWindow
 
@@ -24,19 +23,20 @@ if __name__ == "__main__":
 
     window = MainWindow()
 
-    model = QStringListModel()
     wad = WAD()
     wad.from_file(r"c:\downloads\wads\DOOM2.WAD")
     wad.from_file(r"c:\downloads\wads\id1.wad")
-    lumps = wad.graphics + wad.patches + wad.sprites
-    model.setStringList(lumps)
-    window.ui.listView.setModel(model)
 
     scene = QGraphicsScene()
 
-    window.ui.treeWidget.setColumnCount(2)
-    window.ui.treeWidget.setHeaderLabels(["Key", "Value"])
-    sbardef = SBarDef(scene, window.ui.treeWidget, window.ui.comboBox, wad)
+    sbardef = SBarDef(
+        scene=scene,
+        prop=window.ui.treeProp,
+        cond=window.ui.treeCond,
+        combo=window.ui.comboBox,
+        wad=wad,
+    )
+
     window.ui.comboBox.currentIndexChanged.connect(sbardef.draw)
     sbardef.draw(0)
 
