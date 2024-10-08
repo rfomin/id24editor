@@ -1,7 +1,5 @@
 __pycache__/
 
-# pyright
-prproject.json
-
 # generated files
 ui_mainwindow.py
+ui_editconditions.py

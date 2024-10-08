@@ -1,6 +1,6 @@
 import json
+import omg
 
-from omg import WAD
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
@@ -17,136 +17,17 @@ from PySide6.QtWidgets import (
     QTreeWidgetItem,
 )
 
-SCREENWIDTH = 320
-SCREENHEIGHT = 200
-
-
-class Alignment:
-    h_left = 0x00
-    h_middle = 0x01
-    h_right = 0x02
-    h_mask = 0x03
-    v_top = 0x00
-    v_middle = 0x04
-    v_bottom = 0x08
-    v_mask = 0x0C
-
-
-sbc_weaponowned = 0
-sbc_weaponselected = 1
-sbc_weaponnotselected = 2
-sbc_weaponhasammo = 3
-sbc_selectedweaponhasammo = 4
-sbc_selectedweaponammotype = 5
-sbc_weaponslotowned = 6
-sbc_weaponslotnotowned = 7
-sbc_weaponslotselected = 8
-sbc_weaponslotnotselected = 9
-sbc_itemowned = 10
-sbc_itemnotowned = 11
-sbc_featurelevelgreaterequal = 12
-sbc_featurelevelless = 13
-sbc_sessiontypeeequal = 14
-sbc_sessiontypenotequal = 15
-sbc_modeeequal = 16
-sbc_modenotequal = 17
-sbc_hudmodeequal = 18
-
-wp_fist = 0
-wp_pistol = 1
-wp_shotgun = 2
-wp_chaingun = 3
-wp_missile = 4
-wp_plasma = 5
-wp_bfg = 6
-wp_chainsaw = 7
-wp_supershotgun = 8
-
-weapons = [
-    ["First", 1],
-    ["Pistol", 1],
-    ["Shotgun", 1],
-    ["Chaingun", 1],
-    ["Rocket Launcher", 1],
-    ["Plasmagun", 1],
-    ["BFG", 1],
-    ["Chainsaw", 1],
-    ["Super Shotgun", 1],
-]
-
-am_clip  = 0  # Pistol / chaingun ammo.
-am_shell = 1  # Shotgun / double barreled shotgun.
-am_cell = 2   # Plasma rifle, BFG.
-am_misl = 3   # Missile launcher.
-am_noammo = 5
-
-ammo = [
-    ["Bullets", 1],
-    ["Shells", 1],
-    ["Cells", 1],
-    ["Rockets", 1]
-]
-
-slots = [
-    ["1", 1],
-    ["2", 1],
-    ["3", 1],
-    ["4", 1],
-    ["5", 1],
-    ["6", 1],
-    ["7", 1]
-]
-
-weapons_ammo = (
-    am_noammo,
-    am_clip,
-    am_shell,
-    am_clip,
-    am_misl,
-    am_cell,
-    am_cell,
-    am_clip,
-    am_shell,
+import doomdata
+from doomdata import (
+    Alignment,
+    Ammo,
+    Weapon,
+    Slots,
+    Session,
+    GameMode,
+    sbc
 )
 
-weapons_slots = (1, 2, 3, 4, 5, 6, 7, 1, 3)
-
-selectedweapon = wp_pistol
-selectedslot = 1
-
-singleplayer = 0
-cooperative = 1
-deathmatch = 2
-
-sessiontype = [
-    ["Singleplayer", 1],
-    ["Cooperative", 0],
-    ["Deathmatch", 0],
-]
-
-currentsession = singleplayer
-
-shareware = 0    # DOOM 1 shareware, E1, M9
-registered = 1   # DOOM 1 registered, E3, M27
-commercial = 2   # DOOM 2 retail, E1 M34 
-retail = 3       # DOOM 1 retail, E4, M36
-indetermined = 4
-
-gamemode = [
-    ["Shareware", 0],
-    ["Registered", 0],
-    ["Commercial", 1],
-    ["Retail", 0],
-    ["Indetermined", 0],
-]
-
-currentgamemode = commercial
-
-other = [
-    ["CompactHUD", 0]
-]
-
-conditions = ammo + weapons + slots + other
 
 def checkConditions(elem: dict[str, object]) -> bool:
     result = True
@@ -155,50 +36,50 @@ def checkConditions(elem: dict[str, object]) -> bool:
             cond = condition["condition"]
             param = condition["param"]
 
-            if cond == sbc_weaponowned:
-                result &= weapons[param][1]
+            if cond == sbc.weaponowned:
+                result &= Weapon.items[param][1]
 
-            elif cond == sbc_weaponselected:
-                result &= selectedweapon == param
+            elif cond == sbc.weaponselected:
+                result &= Weapon.selected== param
 
-            elif cond == sbc_weaponnotselected:
-                result &= selectedweapon != param
+            elif cond == sbc.weaponnotselected:
+                result &= Weapon.selected!= param
 
-            elif cond == sbc_weaponhasammo:
-                result &= weapons_ammo[param] != am_noammo
+            elif cond == sbc.weaponhasammo:
+                result &= Ammo.weapon[param] != Ammo.noammo
 
-            elif cond == sbc_selectedweaponhasammo:
-                result &= weapons_ammo[selectedweapon] != am_noammo
+            elif cond == sbc.selectedweaponhasammo:
+                result &= Ammo.weapon[Weapon.selected] != Ammo.noammo
 
-            elif cond == sbc_selectedweaponammotype:
-                result &= weapons_ammo[selectedweapon] == param
+            elif cond == sbc.selectedweaponammotype:
+                result &= Ammo.weapon[Weapon.selected] == param
 
-            elif cond == sbc_weaponslotowned:
-                result &= slots[weapons_slots[param - 1] - 1][1]
+            elif cond == sbc.weaponslotowned:
+                result &= Slots.items[Slots.weapon[param - 1] - 1][1]
 
-            elif cond == sbc_weaponslotnotowned:
-                result &= not slots[weapons_slots[param - 1] - 1][1]
+            elif cond == sbc.weaponslotnotowned:
+                result &= not Slots.items[Slots.weapon[param - 1] - 1][1]
 
-            elif cond == sbc_weaponslotselected:
-                result &= selectedslot == param
+            elif cond == sbc.weaponslotselected:
+                result &= Slots.selected == param
 
-            elif cond == sbc_weaponslotnotselected:
-                result &= selectedslot != param
+            elif cond == sbc.weaponslotnotselected:
+                result &= Slots.selected != param
 
-            elif cond == sbc_sessiontypeeequal:
-                result &= currentsession == param
+            elif cond == sbc.sessiontypeeequal:
+                result &= Session.current == param
 
-            elif cond == sbc_sessiontypenotequal:
-                result &= currentsession != param
+            elif cond == sbc.sessiontypenotequal:
+                result &= Session.current != param
 
-            elif cond == sbc_modeeequal:
-                result &= currentgamemode == param
+            elif cond == sbc.modeeequal:
+                result &= GameMode.current == param
 
-            elif cond == sbc_modenotequal:
-                result &= currentgamemode != param
+            elif cond == sbc.modenotequal:
+                result &= GameMode.current != param
 
-            elif cond == sbc_hudmodeequal:
-                result &= other[0][1] == param
+            elif cond == sbc.hudmodeequal:
+                result &= doomdata.other[0][1] == param
 
     return result
 
@@ -207,7 +88,7 @@ def clamp(smallest, largest, n):
     return max(smallest, min(n, largest))
 
 
-def cyanToAlpha(image: Image.Image) -> Image.Image:
+def cyanToAlpha(image: Image) -> Image:
     image = image.convert("RGBA")
 
     data = image.getdata()
@@ -228,7 +109,7 @@ def lumpToPixmap(lump) -> QPixmap:
     return QPixmap(ImageQt(image))
 
 
-def imageToPixmap(image: Image.Image) -> QPixmap:
+def imageToPixmap(image: Image) -> QPixmap:
     image = cyanToAlpha(image)
     return QPixmap(ImageQt(image))
 
@@ -242,15 +123,15 @@ class NumberFont:
         self.minus = None
         self.percent = None
 
-    def addNumber(self, image: Image.Image):
+    def addNumber(self, image: Image):
         self.numbers.append(cyanToAlpha(image))
         self.maxwidth = max(self.maxwidth, image.width)
         self.maxheight = max(self.maxheight, image.height)
 
-    def addMinus(self, image: Image.Image):
+    def addMinus(self, image: Image):
         self.minus = cyanToAlpha(image)
 
-    def addPercent(self, image: Image.Image):
+    def addPercent(self, image: Image):
         self.percent = cyanToAlpha(image)
 
     def getPixmap(self, elem: dict[str, object], pct: bool) -> QPixmap:
@@ -304,7 +185,7 @@ class SBarElem(QObject, QGraphicsPixmapItem):
         alignment = self.elem["alignment"]
 
         if not alignment & Alignment.h_middle:
-            x = clamp(0, SCREENWIDTH - width + 1, x)
+            x = clamp(0, doomdata.SCREENWIDTH - width + 1, x)
         if not alignment & Alignment.v_middle:
             y = clamp(0, self.screenheight - height + 1, y)
 
@@ -340,7 +221,7 @@ class SBarDef:
         prop: QTreeWidget,
         cond: QTreeWidget,
         combo: QComboBox,
-        wad: WAD,
+        wad: omg.WAD,
     ):
         self.scene = scene
         self.combo = combo
@@ -389,46 +270,39 @@ class SBarDef:
 
     def populateConditions(self):
         index = 0
-        index = self.populateSubTree(index, "Ammo", ammo)
-        index = self.populateSubTree(index, "Weapons", weapons)
-        index = self.populateSubTree(index, "Slots", slots)
+        index = self.populateSubTree(index, "Ammo", Ammo.items)
+        index = self.populateSubTree(index, "Weapons", Weapon.items)
+        index = self.populateSubTree(index, "Slots", Slots.items)
 
-        for name, value in other:
+        for name, value in doomdata.other:
             item = SBarCondItem([name], index)
             item.setCheckState(1, Qt.Checked if value == 1 else Qt.Unchecked)
             self.cond.insertTopLevelItem(0, item)
             index += 1
 
         self.comboWeap = QComboBox()
-        self.populateCombo(self.comboWeap, "Selected Weapon", weapons)
+        self.populateCombo(self.comboWeap, "Selected Weapon", Weapon.items)
 
         self.comboSlot = QComboBox()
-        self.populateCombo(self.comboSlot, "Selected Slot", slots)
+        self.populateCombo(self.comboSlot, "Selected Slot", Slots.items)
 
         self.comboSession = QComboBox()
-        self.populateCombo(self.comboSession, "Session Type", sessiontype)
+        self.populateCombo(self.comboSession, "Session Type", Session.items)
 
         self.comboGameMode = QComboBox()
-        self.populateCombo(self.comboGameMode, "Game Mode", gamemode)
-        self.comboGameMode.setCurrentIndex(currentgamemode)
+        self.populateCombo(self.comboGameMode, "Game Mode", GameMode.items)
+        self.comboGameMode.setCurrentIndex(GameMode.current)
 
     def updateCombo(self):
-        global selectedweapon
-        selectedweapon = self.comboWeap.currentIndex()
-
-        global selectedslot
-        selectedslot = self.comboSlot.currentIndex()
-
-        global currentsession
-        currentsession = self.comboSession.currentIndex()
-
-        global currentgamemode
-        currentgamemode = self.comboGameMode.currentIndex()
+        Weapon.selected= self.comboWeap.currentIndex()
+        Slots.selected = self.comboSlot.currentIndex()
+        Session.current = self.comboSession.currentIndex()
+        GameMode.current = self.comboGameMode.currentIndex()
 
         self.draw(self.barindex)
 
     def updateConditions(self, item: SBarCondItem):
-        conditions[item.cond][1] = 1 if item.checkState(1) == Qt.Checked else 0
+        doomdata.conditions[item.cond][1] = 1 if item.checkState(1) == Qt.Checked else 0
         self.draw(self.barindex)
 
     def loadFonts(self):
@@ -548,7 +422,7 @@ class SBarDef:
 
         self.screenheight = statusbar["height"]
 
-        rect = QRect(0, 0, SCREENWIDTH, self.screenheight)
+        rect = QRect(0, 0, doomdata.SCREENWIDTH, self.screenheight)
         self.scene.setSceneRect(rect)
         item = QGraphicsRectItem(rect)
         item.setBrush(QColor(255, 0, 255, 255))

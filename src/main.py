@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsScene
 from ui_mainwindow import Ui_MainWindow
 
 from sbardef import SBarDef
-from omg import WAD
+import omg
 
 
 class MainWindow(QMainWindow):
@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     window = MainWindow()
 
-    wad = WAD()
+    wad = omg.WAD()
     wad.from_file(r"c:\downloads\wads\DOOM2.WAD")
     wad.from_file(r"c:\downloads\wads\id1.wad")
 
