@@ -47,18 +47,6 @@ class Weapon:
     supershotgun = 8
     selected = pistol
 
-    items = [
-        ["First", 1],
-        ["Pistol", 1],
-        ["Shotgun", 1],
-        ["Chaingun", 1],
-        ["Rocket Launcher", 1],
-        ["Plasmagun", 1],
-        ["BFG", 1],
-        ["Chainsaw", 1],
-        ["Super Shotgun", 1],
-    ]
-
 
 class Ammo:
     clip = 0  # Pistol / chaingun ammo.
@@ -66,8 +54,6 @@ class Ammo:
     cell = 2  # Plasma rifle, BFG.
     misl = 3  # Missile launcher.
     noammo = 5
-
-    items = [["Bullets", 1], ["Shells", 1], ["Cells", 1], ["Rockets", 1]]
 
     weapon = (
         noammo,
@@ -84,9 +70,6 @@ class Ammo:
 
 class Slots:
     selected = 1
-
-    items = [["1", 1], ["2", 1], ["3", 1], ["4", 1], ["5", 1], ["6", 1], ["7", 1]]
-
     weapon = (1, 2, 3, 4, 5, 6, 7, 1, 3)
 
 
@@ -94,13 +77,6 @@ class Session:
     singleplayer = 0
     cooperative = 1
     deathmatch = 2
-    current = singleplayer
-
-    items = [
-        ["Singleplayer", 1],
-        ["Cooperative", 0],
-        ["Deathmatch", 0],
-    ]
 
 
 class GameMode:
@@ -109,17 +85,3 @@ class GameMode:
     commercial = 2  # DOOM 2 retail, E1 M34
     retail = 3  # DOOM 1 retail, E4, M36
     indetermined = 4
-    current = commercial
-
-    items = [
-        ["Shareware", 0],
-        ["Registered", 0],
-        ["Commercial", 1],
-        ["Retail", 0],
-        ["Indetermined", 0],
-    ]
-
-
-other = [["CompactHUD", 0]]
-
-conditions = Ammo.items + Weapon.items + Slots.items + other

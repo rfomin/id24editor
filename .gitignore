@@ -1,5 +1,7 @@
 __pycache__/
 
+env/
+
 # generated files
 ui_mainwindow.py
 ui_editconditions.py
