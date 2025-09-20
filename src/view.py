@@ -1,3 +1,4 @@
+import shiboken6
 from PySide6.QtWidgets import (
     QMainWindow,
     QDialog,
@@ -278,8 +279,9 @@ class View(QObject):
         self.main_window.ui.removeElem.clicked.connect(self.remove_selected_element)
 
     def on_selection_changed(self):
-        selected_items = self.scene.selectedItems()
-        self.main_window.ui.removeElem.setEnabled(len(selected_items) > 0)
+        if shiboken6.isValid(self.scene):
+            selected_items = self.scene.selectedItems()
+            self.main_window.ui.removeElem.setEnabled(len(selected_items) > 0)
 
     def remove_selected_element(self):
         selected_items = self.scene.selectedItems()

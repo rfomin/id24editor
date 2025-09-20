@@ -1,8 +1,21 @@
 import json
-from PySide6.QtWidgets import QComboBox, QPushButton, QTreeWidgetItem, QFileDialog
+from PySide6.QtWidgets import (
+    QComboBox,
+    QPushButton,
+    QTreeWidgetItem,
+    QFileDialog,
+    QStyledItemDelegate,
+)
 from PySide6.QtCore import Qt, Slot, QPointF
 
 from view import SBarCondItem, LumpModel
+
+
+class ReadOnlyColumnDelegate(QStyledItemDelegate):
+    def createEditor(self, parent, option, index):
+        if index.column() == 0:
+            return None
+        return super().createEditor(parent, option, index)
 
 
 class Controller:
@@ -11,21 +24,25 @@ class Controller:
         self.view = view
         self.barindex = 0
 
-        self.view.main_window.ui.comboBox.currentIndexChanged.connect(self.draw)
-        self.view.main_window.ui.horizontalSlider.valueChanged.connect(
+        self.win = self.view.main_window
+        self.win.ui.comboBox.currentIndexChanged.connect(self.draw_view)
+        self.win.ui.horizontalSlider.valueChanged.connect(
             self.view.main_window.updateScale
         )
-        self.view.main_window.updateScale(200)
-        self.view.main_window.openJSONFile.connect(self.open_json_file)
-        self.view.main_window.openWadFile.connect(self.open_wad_file)
-        self.view.main_window.saveAsFile.connect(self.save_as_file)
-        self.view.main_window.showLumps.connect(self.show_lumps)
+        self.win.updateScale(200)
+        self.win.openJSONFile.connect(self.open_json_file)
+        self.win.openWadFile.connect(self.open_wad_file)
+        self.win.saveAsFile.connect(self.save_as_file)
+        self.win.showLumps.connect(self.show_lumps)
+
         self.view.lumps_dialog.lumpSelected.connect(self.add_graphic_element)
         self.view.elementRemoved.connect(self.remove_data_element)
 
         self.prop = self.view.main_window.ui.treeProp
         self.prop.setColumnCount(2)
         self.prop.setHeaderLabels(["Key", "Value"])
+        delegate = ReadOnlyColumnDelegate(self.prop)
+        self.prop.setItemDelegate(delegate)
 
         self.cond = self.view.main_window.ui.treeCond
         self.cond.setColumnCount(2)
@@ -100,13 +117,13 @@ class Controller:
         self.model.session_current = self.comboSession.currentIndex()
         self.model.gamemode_current = self.comboGameMode.currentIndex()
 
-        self.draw(self.barindex)
+        self.draw_view(self.barindex)
 
     def update_conditions(self, item: SBarCondItem):
         self.model.conditions[item.cond][1] = (
             1 if item.checkState(1) == Qt.CheckState.Checked else 0
         )
-        self.draw(self.barindex)
+        self.draw_view(self.barindex)
 
     def update_elem(self, x: int, y: int, elem: dict):
         values = next(iter(elem.values()))
@@ -131,6 +148,7 @@ class Controller:
 
     @Slot(dict)
     def update_properties(self, elem: dict):
+        self.prop.blockSignals(True)    
         self.prop.clear()
 
         for key, value in elem.items():
@@ -143,7 +161,36 @@ class Controller:
                     self.prop.insertTopLevelItem(0, item)
                     self.prop.setItemWidget(item, 1, button)
                     continue
+                
+                item.setFlags(item.flags() | Qt.ItemIsEditable)
                 self.prop.insertTopLevelItem(0, item)
+        
+        self.prop.blockSignals(False)
+
+        @Slot(QTreeWidgetItem, int)
+        def property_changed_handler(item, column):
+            if column != 1:
+                return
+
+            key = item.text(0)
+            new_value_str = item.text(1)
+            old_value = elem.get(key)
+
+            if isinstance(old_value, bool):
+                new_value = new_value_str.lower() in ('true', '1', 'yes')
+            elif isinstance(old_value, int):
+                new_value = int(new_value_str)
+            elif isinstance(old_value, float):
+                new_value = float(new_value_str)
+            elif old_value is None:
+                new_value = None if new_value_str.lower() == 'none' else new_value_str
+            else:
+                new_value = new_value_str
+
+            if new_value != old_value:
+                self.update_data_element(elem, key, new_value)
+
+        self.prop.itemChanged.connect(property_changed_handler)
 
         if elem["children"] is not None:
             x = elem["x"]
@@ -151,7 +198,7 @@ class Controller:
             for child in elem["children"]:
                 self.update_elem(x, y, child)
 
-    def draw(self, barindex: int):
+    def draw_view(self, barindex: int):
         self.barindex = barindex
         self.view.draw(barindex, self.update_properties)
 
@@ -160,14 +207,14 @@ class Controller:
         if fileName:
             self.model.load_json(fileName)
             self.populate_statusbar_combo()
-            self.draw(0)
+            self.draw_view(0)
 
     def open_wad_file(self):
         fileName, _ = QFileDialog.getOpenFileName(self.view.main_window, "Open WAD file", "", "WAD files (*.wad)")
         if fileName:
             self.model.load_wad(fileName)
             self.populate_statusbar_combo()
-            self.draw(0)
+            self.draw_view(0)
 
     def save_as_file(self):
         fileName, _ = QFileDialog.getSaveFileName(self.view.main_window, "Save SBARDEF as...", "", "JSON files (*.json)")
@@ -199,7 +246,7 @@ class Controller:
             statusbar["children"] = []
         statusbar["children"].append(new_element)
 
-        self.draw(self.barindex)
+        self.draw_view(self.barindex)
 
     def remove_data_element(self, elem_data: dict):
 
@@ -216,4 +263,21 @@ class Controller:
 
         find_and_remove(self.model.sbardef["data"]["statusbars"][self.barindex], elem_data)
 
-        self.draw(self.barindex)
+        self.draw_view(self.barindex)
+
+    def update_data_element(self, elem_data: dict, key: str, value):
+
+        def find_and_update(parent, elem_to_update):
+            if "children" in parent and parent["children"] is not None:
+                for i, child in enumerate(parent["children"]):
+                    elem = next(iter(child.values()))
+                    if elem == elem_to_update:
+                        elem[key] = value
+                        return True
+                    if find_and_update(elem, elem_to_update):
+                        return True
+            return False
+
+        find_and_update(self.model.sbardef["data"]["statusbars"][self.barindex], elem_data)
+
+        self.draw_view(self.barindex)
