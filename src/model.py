@@ -4,14 +4,12 @@ import omg
 from PIL import Image
 
 from doomdata import (
-    Alignment,
     Ammo,
     Weapon,
     Slots,
     Session,
     GameMode,
-    sbc,
-    SCREENWIDTH,
+    sbc
 )
 
 

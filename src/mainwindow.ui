@@ -108,9 +108,15 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionOpenWAD"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
+  <action name="actionOpenWAD">
+   <property name="text">
+    <string>Open WAD</string>
+   </property>
+  </action>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>

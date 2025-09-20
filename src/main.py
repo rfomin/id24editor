@@ -15,8 +15,6 @@ if __name__ == "__main__":
     view = View(model)
     controller = Controller(model, view)
 
-    controller.draw(0)
-
     view.main_window.show()
 
     sys.exit(app.exec())

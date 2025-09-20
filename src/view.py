@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QDialog, QGraphicsScene, QWidget, QGraphicsPixmapItem, QGraphicsItem, QGraphicsRectItem, QTreeWidgetItem
-from PySide6.QtCore import QObject, Signal, Slot, QPointF, QRect
+from PySide6.QtWidgets import QMainWindow, QDialog, QGraphicsScene, QWidget, QGraphicsPixmapItem, QGraphicsItem, QGraphicsRectItem, QTreeWidgetItem
+from PySide6.QtCore import QObject, Signal, QPointF, QRect
 from PySide6.QtGui import QPixmap, QColor
 
 from PIL.ImageQt import ImageQt
@@ -13,10 +13,13 @@ from typing import Callable
 
 
 class MainWindow(QMainWindow):
+    openWadFile = Signal()
+
     def __init__(self):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.ui.actionOpenWAD.triggered.connect(self.openWadFile)
 
     def updateScale(self, value: int):
         s = value / 100.0
@@ -139,7 +142,7 @@ class View:
 
     def draw(self, barindex: int, update: Callable):
         self.clear_scene()
-        self.update = update
+        self.updateProperties = update
 
         statusbar = self.model.sbardef["data"]["statusbars"][barindex]
 
@@ -201,7 +204,7 @@ class View:
 
         item = SBarElem(x, y, elem=elem, screenheight=self.screenheight, pixmap=pixmap)
 
-        item.updateElem.connect(self.update)
+        item.updateElem.connect(self.updateProperties)
 
         if alignment & Alignment.h_middle:
             x -= pixmap.width() >> 1

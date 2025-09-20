@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QComboBox, QPushButton, QTreeWidgetItem
-from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtWidgets import QComboBox, QPushButton, QTreeWidgetItem, QFileDialog
+from PySide6.QtCore import Qt, Slot, QPointF
 
 from view import SBarCondItem
 
@@ -15,6 +15,7 @@ class Controller:
             self.view.main_window.updateScale
         )
         self.view.main_window.updateScale(200)
+        self.view.main_window.openWadFile.connect(self.open_wad_file)
 
         self.prop = self.view.main_window.ui.treeProp
         self.prop.setColumnCount(2)
@@ -145,3 +146,10 @@ class Controller:
     def draw(self, barindex: int):
         self.barindex = barindex
         self.view.draw(barindex, self.update)
+
+    def open_wad_file(self):
+        fileName, _ = QFileDialog.getOpenFileName(self.view.main_window, "Open WAD file", "", "WAD files (*.wad)")
+        if fileName:
+            self.model.load_wad(fileName)
+            self.populate_statusbar_combo()
+            self.draw(0)
