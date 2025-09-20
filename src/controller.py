@@ -4,18 +4,6 @@ from PySide6.QtCore import Qt, Slot, QPointF
 
 from view import SBarCondItem, LumpModel
 
-def copy_without_scene_items(data):
-    if isinstance(data, dict):
-        new_dict = {}
-        for key, value in data.items():
-            if key != "sceneitem":
-                new_dict[key] = copy_without_scene_items(value)
-        return new_dict
-    elif isinstance(data, list):
-        return [copy_without_scene_items(item) for item in data]
-    else:
-        return data
-
 
 class Controller:
     def __init__(self, model, view):
@@ -51,11 +39,13 @@ class Controller:
         self.populate_conditions()
 
     def populate_statusbar_combo(self):
+        statusbar_combo = self.view.main_window.ui.comboBox
+        statusbar_combo.clear()
         for statusbar in self.model.sbardef["data"]["statusbars"]:
             if statusbar["fullscreenrender"] is True:
-                self.view.main_window.ui.comboBox.addItem("Fullscreen")
+                statusbar_combo.addItem("Fullscreen")
             else:
-                self.view.main_window.ui.comboBox.addItem("Statusbar")
+                statusbar_combo.addItem("Statusbar")
 
     def populateSubTree(self, index: int, name: str, items: list) -> int:
         parent = QTreeWidgetItem([name])
@@ -144,7 +134,7 @@ class Controller:
         self.prop.clear()
 
         for key, value in elem.items():
-            if key != "sceneitem" and key != "children":
+            if key != "children":
                 item = QTreeWidgetItem([key, str(value)])
                 if key == "conditions" and value is not None:
                     button = QPushButton(text="Edit")
@@ -182,9 +172,8 @@ class Controller:
     def save_as_file(self):
         fileName, _ = QFileDialog.getSaveFileName(self.view.main_window, "Save SBARDEF as...", "", "JSON files (*.json)")
         if fileName:
-            data_to_save = copy_without_scene_items(self.model.sbardef)
             with open(fileName, 'w') as f:
-                json.dump(data_to_save, f, indent=2)
+                json.dump(self.model.sbardef, f, indent=2)
 
     def show_lumps(self):
         lumps = self.model.lumps

@@ -77,6 +77,7 @@ class SBarModel:
     def load_json(self, path: str):
         with open(path, 'r') as file:
             self.sbardef = json.load(file)
+            self.load_fonts()
 
     def load_fonts(self):
         self.numberfonts = []

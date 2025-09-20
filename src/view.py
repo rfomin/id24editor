@@ -366,5 +366,4 @@ class View(QObject):
             y -= pixmap.height()
 
         item.setPos(QPointF(x, y))
-        elem["sceneitem"] = item
         self.scene.addItem(item)
