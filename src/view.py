@@ -14,12 +14,14 @@ from typing import Callable
 
 class MainWindow(QMainWindow):
     openWadFile = Signal()
+    saveAsFile = Signal()
 
     def __init__(self):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.actionOpenWAD.triggered.connect(self.openWadFile)
+        self.ui.actionSaveAs.triggered.connect(self.saveAsFile)
 
     def updateScale(self, value: int):
         s = value / 100.0
@@ -88,6 +90,9 @@ class SBarElem(QObject, QGraphicsPixmapItem):
         self.updateElem.emit(self.elem)
 
         return super().mouseReleaseEvent(event)
+
+    def to_dict(self):
+        return self.elem
 
 
 class SBarCondItem(QTreeWidgetItem):
@@ -207,11 +212,11 @@ class View:
         item.updateElem.connect(self.updateProperties)
 
         if alignment & Alignment.h_middle:
-            x -= pixmap.width() >> 1
+            x -= pixmap.width() / 2
         elif alignment & Alignment.h_right:
             x -= pixmap.width()
         if alignment & Alignment.v_middle:
-            y -= pixmap.height() >> 1
+            y -= pixmap.height() / 2
         elif alignment & Alignment.v_bottom:
             y -= pixmap.height()
 

@@ -1,7 +1,20 @@
+import json
 from PySide6.QtWidgets import QComboBox, QPushButton, QTreeWidgetItem, QFileDialog
 from PySide6.QtCore import Qt, Slot, QPointF
 
 from view import SBarCondItem
+
+def copy_without_scene_items(data):
+    if isinstance(data, dict):
+        new_dict = {}
+        for key, value in data.items():
+            if key != "sceneitem":
+                new_dict[key] = copy_without_scene_items(value)
+        return new_dict
+    elif isinstance(data, list):
+        return [copy_without_scene_items(item) for item in data]
+    else:
+        return data
 
 
 class Controller:
@@ -16,6 +29,7 @@ class Controller:
         )
         self.view.main_window.updateScale(200)
         self.view.main_window.openWadFile.connect(self.open_wad_file)
+        self.view.main_window.saveAsFile.connect(self.save_as_file)
 
         self.prop = self.view.main_window.ui.treeProp
         self.prop.setColumnCount(2)
@@ -153,3 +167,10 @@ class Controller:
             self.model.load_wad(fileName)
             self.populate_statusbar_combo()
             self.draw(0)
+
+    def save_as_file(self):
+        fileName, _ = QFileDialog.getSaveFileName(self.view.main_window, "Save SBARDEF as...", "", "JSON files (*.json)")
+        if fileName:
+            data_to_save = copy_without_scene_items(self.model.sbardef)
+            with open(fileName, 'w') as f:
+                json.dump(data_to_save, f, indent=2)
