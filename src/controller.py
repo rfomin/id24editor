@@ -2,7 +2,7 @@ import json
 from PySide6.QtWidgets import QComboBox, QPushButton, QTreeWidgetItem, QFileDialog
 from PySide6.QtCore import Qt, Slot, QPointF
 
-from view import SBarCondItem
+from view import SBarCondItem, LumpModel
 
 def copy_without_scene_items(data):
     if isinstance(data, dict):
@@ -30,6 +30,7 @@ class Controller:
         self.view.main_window.updateScale(200)
         self.view.main_window.openWadFile.connect(self.open_wad_file)
         self.view.main_window.saveAsFile.connect(self.save_as_file)
+        self.view.main_window.showLumps.connect(self.show_lumps)
 
         self.prop = self.view.main_window.ui.treeProp
         self.prop.setColumnCount(2)
@@ -174,3 +175,10 @@ class Controller:
             data_to_save = copy_without_scene_items(self.model.sbardef)
             with open(fileName, 'w') as f:
                 json.dump(data_to_save, f, indent=2)
+
+    def show_lumps(self):
+        lumps = self.model.lumps
+        if lumps:
+            model = LumpModel(lumps)
+            self.view.lumps_dialog.setModel(model)
+        self.view.lumps_dialog.show()

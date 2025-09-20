@@ -1,11 +1,33 @@
-from PySide6.QtWidgets import QMainWindow, QDialog, QGraphicsScene, QWidget, QGraphicsPixmapItem, QGraphicsItem, QGraphicsRectItem, QTreeWidgetItem
-from PySide6.QtCore import QObject, Signal, QPointF, QRect
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QDialog,
+    QGraphicsScene,
+    QWidget,
+    QGraphicsPixmapItem,
+    QGraphicsItem,
+    QGraphicsRectItem,
+    QTreeWidgetItem,
+    QListView,
+    QStyledItemDelegate,
+    QStyle,
+)
+from PySide6.QtCore import (
+    QObject,
+    Signal,
+    QPointF,
+    QRect,
+    QAbstractListModel,
+    QSize,
+    Qt,
+    QSortFilterProxyModel,
+)
 from PySide6.QtGui import QPixmap, QColor
 
 from PIL.ImageQt import ImageQt
 
 from ui_mainwindow import Ui_MainWindow
 from ui_editconditions import Ui_Dialog
+from ui_lumpsdialog import Ui_LumpsDialog
 
 from doomdata import SCREENWIDTH, Alignment
 
@@ -15,6 +37,7 @@ from typing import Callable
 class MainWindow(QMainWindow):
     openWadFile = Signal()
     saveAsFile = Signal()
+    showLumps = Signal()
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -22,6 +45,7 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         self.ui.actionOpenWAD.triggered.connect(self.openWadFile)
         self.ui.actionSaveAs.triggered.connect(self.saveAsFile)
+        self.ui.actionShowLumps.triggered.connect(self.showLumps)
 
     def updateScale(self, value: int):
         s = value / 100.0
@@ -34,6 +58,96 @@ class EditCond(QDialog):
         super().__init__(parent)
         self.dlg = Ui_Dialog()
         self.dlg.setupUi(self)
+
+
+class LumpsDialog(QDialog):
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.dlg = Ui_LumpsDialog()
+        self.dlg.setupUi(self)
+        self.dlg.listView.setViewMode(QListView.IconMode)
+        self.dlg.listView.setItemDelegate(LumpItemDelegate(self))
+
+        self.proxy_model = QSortFilterProxyModel()
+        self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.dlg.listView.setModel(self.proxy_model)
+
+        self.dlg.filterLineEdit.textChanged.connect(self.proxy_model.setFilterRegularExpression)
+
+    def setModel(self, model):
+        self.proxy_model.setSourceModel(model)
+
+
+class LumpItemDelegate(QStyledItemDelegate):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def paint(self, painter, option, index):
+        source_model = index.model().sourceModel()
+        lump_name = index.data(Qt.DisplayRole)
+
+        # Get pixmap from cache or load it
+        if lump_name in source_model.pixmap_cache:
+            pixmap = source_model.pixmap_cache[lump_name]
+        else:
+            try:
+                lump = source_model.lumps[lump_name]
+                pixmap = lumpToPixmap(lump)
+                source_model.pixmap_cache[lump_name] = pixmap
+            except Exception as e:
+                print(f"Could not convert lump {lump_name} to pixmap: {e}")
+                pixmap = None
+
+        # Draw the item
+        painter.save()
+
+        # Draw background if selected
+        if option.state & QStyle.State_Selected:
+            painter.fillRect(option.rect, option.palette.highlight())
+
+        # Draw icon
+        if pixmap:
+            painter.drawPixmap(option.rect.topLeft(), pixmap)
+
+        # Draw text
+        if pixmap:
+            text_rect = QRect(option.rect.left(), option.rect.top() + pixmap.height(), option.rect.width(), 20)
+        else:
+            text_rect = option.rect
+        painter.drawText(text_rect, Qt.AlignCenter, lump_name)
+
+        painter.restore()
+
+    def sizeHint(self, option, index):
+        source_model = index.model().sourceModel()
+        lump_name = index.data(Qt.DisplayRole)
+
+        lump = source_model.lumps[lump_name]
+        # Add some padding for the name
+        return QSize(max(lump.width + 20, 100), lump.height + 20)
+
+
+class LumpModel(QAbstractListModel):
+    def __init__(self, lumps, parent=None):
+        super().__init__(parent)
+        self.lumps = lumps
+        self.lump_names = list(lumps.keys())
+        self.pixmap_cache = {}
+
+    def rowCount(self, parent):
+        return len(self.lump_names)
+
+    def data(self, index, role):
+        if not index.isValid():
+            return None
+
+        row = index.row()
+        lump_name = self.lump_names[row]
+
+        if role == Qt.DisplayRole:
+            return lump_name
+
+        return None
 
 
 class SBarElem(QObject, QGraphicsPixmapItem):
@@ -138,6 +252,7 @@ class View:
         self.scene = QGraphicsScene()
         self.main_window = MainWindow()
         self.edit_cond_dialog = EditCond(self.main_window)
+        self.lumps_dialog = LumpsDialog(self.main_window)
 
         self.main_window.ui.graphicsView.setScene(self.scene)
 
