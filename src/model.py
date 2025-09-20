@@ -89,15 +89,15 @@ class SBarModel:
             for num in range(0, 10):
                 name = stem + "NUM" + str(num)
                 if name in self.lumps:
-                    font.addNumber(self.lumps[name].to_Image())
+                    font.add_number(self.lumps[name].to_Image())
 
             name = stem + "MINUS"
             if name in self.lumps:
-                font.addMinus(self.lumps[name].to_Image())
+                font.add_minus(self.lumps[name].to_Image())
 
             name = stem + "PRCNT"
             if name in self.lumps:
-                font.addPercent(self.lumps[name].to_Image())
+                font.add_percent(self.lumps[name].to_Image())
 
             self.numberfonts.append(font)
 
@@ -165,16 +165,16 @@ class NumberFont:
         self.minus = None
         self.percent = None
 
-    def addNumber(self, image):
-        self.numbers.append(cyanToAlpha(image))
+    def add_number(self, image):
+        self.numbers.append(cyan_to_alpha(image))
         self.maxwidth = max(self.maxwidth, image.width)
         self.maxheight = max(self.maxheight, image.height)
 
-    def addMinus(self, image):
-        self.minus = cyanToAlpha(image)
+    def add_minus(self, image):
+        self.minus = cyan_to_alpha(image)
 
-    def addPercent(self, image):
-        self.percent = cyanToAlpha(image)
+    def add_percent(self, image):
+        self.percent = cyan_to_alpha(image)
 
     def getPixmap(self, elem: dict, pct: bool):
         maxlength = int(elem["maxlength"])
@@ -194,16 +194,16 @@ class NumberFont:
         return image
 
 
-def cyanToAlpha(image):
+def cyan_to_alpha(image):
     image = image.convert("RGBA")
 
     data = image.getdata()
-    newData = []
+    newdata = []
     for item in data:
         if item[0] == 255 and item[1] == 0 and item[2] == 255:
-            newData.append((255, 0, 255, 0))
+            newdata.append((255, 0, 255, 0))
         else:
-            newData.append(item)
-    image.putdata(newData)
+            newdata.append(item)
+    image.putdata(newdata)
 
     return image

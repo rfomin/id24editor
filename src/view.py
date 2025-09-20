@@ -107,7 +107,7 @@ class LumpItemDelegate(QStyledItemDelegate):
         else:
             try:
                 lump = source_model.lumps[lump_name]
-                pixmap = lumpToPixmap(lump)
+                pixmap = lump_to_pixmap(lump)
                 source_model.pixmap_cache[lump_name] = pixmap
             except Exception as e:
                 print(f"Could not convert lump {lump_name} to pixmap: {e}")
@@ -234,28 +234,28 @@ def clamp(smallest, largest, n):
     return max(smallest, min(n, largest))
 
 
-def lumpToPixmap(lump) -> QPixmap:
+def lump_to_pixmap(lump) -> QPixmap:
     image = lump.to_Image()
-    image = cyanToAlpha(image)
+    image = cyan_to_alpha(image)
     return QPixmap(ImageQt(image))
 
 
-def imageToPixmap(image) -> QPixmap:
-    image = cyanToAlpha(image)
+def image_to_pixmap(image) -> QPixmap:
+    image = cyan_to_alpha(image)
     return QPixmap(ImageQt(image))
 
 
-def cyanToAlpha(image):
+def cyan_to_alpha(image):
     image = image.convert("RGBA")
 
     data = image.getdata()
-    newData = []
+    newdata = []
     for item in data:
         if item[0] == 255 and item[1] == 0 and item[2] == 255:
-            newData.append((255, 0, 255, 0))
+            newdata.append((255, 0, 255, 0))
         else:
-            newData.append(item)
-    image.putdata(newData)
+            newdata.append(item)
+    image.putdata(newdata)
 
     return image
 
@@ -292,7 +292,7 @@ class View(QObject):
 
     def draw(self, barindex: int, update: Callable):
         self.clear_scene()
-        self.updateProperties = update
+        self.update_properties = update
 
         statusbar = self.model.sbardef["data"]["statusbars"][barindex]
 
@@ -306,9 +306,9 @@ class View(QObject):
 
         if statusbar["children"] is not None:
             for child in statusbar["children"]:
-                self.drawElem(0, 0, child)
+                self.draw_elem(0, 0, child)
 
-    def drawElem(self, x: int, y: int, elem: dict):
+    def draw_elem(self, x: int, y: int, elem: dict):
         type = next(iter(elem))
         values = next(iter(elem.values()))
 
@@ -324,37 +324,37 @@ class View(QObject):
                 lump = self.model.lumps[patch]
                 x -= lump.x_offset
                 y -= lump.y_offset
-                pixmap = lumpToPixmap(lump)
-                self.addToScene(x, y, values, pixmap)
+                pixmap = lump_to_pixmap(lump)
+                self.add_to_scene(x, y, values, pixmap)
 
         elif type == "number" or type == "percent":
             for font in self.model.numberfonts:
                 if font.name == values["font"]:
-                    pixmap = imageToPixmap(
+                    pixmap = image_to_pixmap(
                         font.getPixmap(
                             values, pct=True if type == "percent" else False
                         )
                     )
-                    self.addToScene(x, y, values, pixmap)
+                    self.add_to_scene(x, y, values, pixmap)
 
         elif type == "face":
             lump = self.model.lumps["STFST00"]
             if lump is not None:
                 x -= lump.x_offset
                 y -= lump.y_offset
-                pixmap = lumpToPixmap(lump)
-                self.addToScene(x, y, values, pixmap)
+                pixmap = lump_to_pixmap(lump)
+                self.add_to_scene(x, y, values, pixmap)
 
         if values["children"] is not None:
             for child in values["children"]:
-                self.drawElem(x, y, child)
+                self.draw_elem(x, y, child)
 
-    def addToScene(self, x: int, y: int, elem: dict, pixmap: QPixmap):
+    def add_to_scene(self, x: int, y: int, elem: dict, pixmap: QPixmap):
         alignment = elem["alignment"]
 
         item = SBarElem(x, y, elem=elem, screenheight=self.screenheight, pixmap=pixmap)
 
-        item.updateElem.connect(self.updateProperties)
+        item.updateElem.connect(self.update_properties)
 
         if alignment & Alignment.h_middle:
             x -= pixmap.width() / 2

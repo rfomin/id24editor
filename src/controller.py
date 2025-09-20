@@ -21,7 +21,7 @@ class Controller:
         self.view.main_window.saveAsFile.connect(self.save_as_file)
         self.view.main_window.showLumps.connect(self.show_lumps)
         self.view.lumps_dialog.lumpSelected.connect(self.add_graphic_element)
-        self.view.elementRemoved.connect(self.remove_element)
+        self.view.elementRemoved.connect(self.remove_data_element)
 
         self.prop = self.view.main_window.ui.treeProp
         self.prop.setColumnCount(2)
@@ -30,10 +30,10 @@ class Controller:
         self.cond = self.view.main_window.ui.treeCond
         self.cond.setColumnCount(2)
         self.cond.setHeaderLabels(["Condition", "Param"])
-        self.cond.itemChanged.connect(self.updateConditions)
+        self.cond.itemChanged.connect(self.update_conditions)
 
-        self.dlg = self.view.edit_cond_dialog
-        self.editcond = self.view.edit_cond_dialog.dlg.treeWidget
+        self.conddlg = self.view.edit_cond_dialog
+        self.editcond = self.conddlg.dlg.treeWidget
 
         self.populate_statusbar_combo()
         self.populate_conditions()
@@ -47,7 +47,7 @@ class Controller:
             else:
                 statusbar_combo.addItem("Statusbar")
 
-    def populateSubTree(self, index: int, name: str, items: list) -> int:
+    def populate_subtree(self, index: int, name: str, items: list) -> int:
         parent = QTreeWidgetItem([name])
         for name, value in items:
             item = SBarCondItem([name], index)
@@ -59,19 +59,19 @@ class Controller:
         self.cond.insertTopLevelItem(0, parent)
         return index
 
-    def populateCombo(self, combo: QComboBox, name: str, items: list):
+    def populate_combo(self, combo: QComboBox, name: str, items: list):
         item = QTreeWidgetItem([name])
         for name, value in items:
             combo.addItem(name)
-        combo.currentIndexChanged.connect(self.updateCombo)
+        combo.currentIndexChanged.connect(self.update_combo)
         self.cond.insertTopLevelItem(0, item)
         self.cond.setItemWidget(item, 1, combo)
 
     def populate_conditions(self):
         index = 0
-        index = self.populateSubTree(index, "Ammo", self.model.ammo_items)
-        index = self.populateSubTree(index, "Weapons", self.model.weapon_items)
-        index = self.populateSubTree(index, "Slots", self.model.slot_items)
+        index = self.populate_subtree(index, "Ammo", self.model.ammo_items)
+        index = self.populate_subtree(index, "Weapons", self.model.weapon_items)
+        index = self.populate_subtree(index, "Slots", self.model.slot_items)
 
         for name, value in self.model.other_items:
             item = SBarCondItem([name], index)
@@ -82,19 +82,19 @@ class Controller:
             index += 1
 
         self.comboWeap = QComboBox()
-        self.populateCombo(self.comboWeap, "Selected Weapon", self.model.weapon_items)
+        self.populate_combo(self.comboWeap, "Selected Weapon", self.model.weapon_items)
 
         self.comboSlot = QComboBox()
-        self.populateCombo(self.comboSlot, "Selected Slot", self.model.slot_items)
+        self.populate_combo(self.comboSlot, "Selected Slot", self.model.slot_items)
 
         self.comboSession = QComboBox()
-        self.populateCombo(self.comboSession, "Session Type", self.model.session_items)
+        self.populate_combo(self.comboSession, "Session Type", self.model.session_items)
 
         self.comboGameMode = QComboBox()
-        self.populateCombo(self.comboGameMode, "Game Mode", self.model.gamemode_items)
+        self.populate_combo(self.comboGameMode, "Game Mode", self.model.gamemode_items)
         self.comboGameMode.setCurrentIndex(self.model.gamemode_current)
 
-    def updateCombo(self):
+    def update_combo(self):
         self.model.weapon_selected = self.comboWeap.currentIndex()
         self.model.slot_selected = self.comboSlot.currentIndex()
         self.model.session_current = self.comboSession.currentIndex()
@@ -102,13 +102,13 @@ class Controller:
 
         self.draw(self.barindex)
 
-    def updateConditions(self, item: SBarCondItem):
+    def update_conditions(self, item: SBarCondItem):
         self.model.conditions[item.cond][1] = (
             1 if item.checkState(1) == Qt.CheckState.Checked else 0
         )
         self.draw(self.barindex)
 
-    def updateElem(self, x: int, y: int, elem: dict):
+    def update_elem(self, x: int, y: int, elem: dict):
         values = next(iter(elem.values()))
 
         x += values["x"]
@@ -119,18 +119,18 @@ class Controller:
 
         if values["children"] is not None:
             for child in values["children"]:
-                self.updateElem(x, y, child)
+                self.update_elem(x, y, child)
 
-    def populateEditCond(self, elem: dict):
+    def populate_edit_cond(self, elem: dict):
         self.editcond.clear()
         item = QTreeWidgetItem([str(elem)])
         self.editcond.insertTopLevelItem(0, item)
 
-    def launchDialog(self):
-        self.dlg.exec()
+    def launch_cond_dialog(self):
+        self.conddlg.exec()
 
     @Slot(dict)
-    def update(self, elem: dict):
+    def update_properties(self, elem: dict):
         self.prop.clear()
 
         for key, value in elem.items():
@@ -138,8 +138,8 @@ class Controller:
                 item = QTreeWidgetItem([key, str(value)])
                 if key == "conditions" and value is not None:
                     button = QPushButton(text="Edit")
-                    self.populateEditCond(elem=value)
-                    button.pressed.connect(self.launchDialog)
+                    self.populate_edit_cond(elem=value)
+                    button.pressed.connect(self.launch_cond_dialog)
                     self.prop.insertTopLevelItem(0, item)
                     self.prop.setItemWidget(item, 1, button)
                     continue
@@ -149,11 +149,11 @@ class Controller:
             x = elem["x"]
             y = elem["y"]
             for child in elem["children"]:
-                self.updateElem(x, y, child)
+                self.update_elem(x, y, child)
 
     def draw(self, barindex: int):
         self.barindex = barindex
-        self.view.draw(barindex, self.update)
+        self.view.draw(barindex, self.update_properties)
 
     def open_json_file(self):
         fileName, _ = QFileDialog.getOpenFileName(self.view.main_window, "Open JSON file", "", "JSON files (*.json)")
@@ -201,7 +201,7 @@ class Controller:
 
         self.draw(self.barindex)
 
-    def remove_element(self, elem_data: dict):
+    def remove_data_element(self, elem_data: dict):
 
         def find_and_remove(parent, elem_to_remove):
             if "children" in parent and parent["children"] is not None:
