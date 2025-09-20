@@ -28,10 +28,12 @@ class Controller:
             self.view.main_window.updateScale
         )
         self.view.main_window.updateScale(200)
+        self.view.main_window.openJSONFile.connect(self.open_json_file)
         self.view.main_window.openWadFile.connect(self.open_wad_file)
         self.view.main_window.saveAsFile.connect(self.save_as_file)
         self.view.main_window.showLumps.connect(self.show_lumps)
         self.view.lumps_dialog.lumpSelected.connect(self.add_graphic_element)
+        self.view.elementRemoved.connect(self.remove_element)
 
         self.prop = self.view.main_window.ui.treeProp
         self.prop.setColumnCount(2)
@@ -162,6 +164,13 @@ class Controller:
     def draw(self, barindex: int):
         self.barindex = barindex
         self.view.draw(barindex, self.update)
+
+    def open_json_file(self):
+        fileName, _ = QFileDialog.getOpenFileName(self.view.main_window, "Open JSON file", "", "JSON files (*.json)")
+        if fileName:
+            self.model.load_json(fileName)
+            self.populate_statusbar_combo()
+            self.draw(0)
 
     def open_wad_file(self):
         fileName, _ = QFileDialog.getOpenFileName(self.view.main_window, "Open WAD file", "", "WAD files (*.wad)")

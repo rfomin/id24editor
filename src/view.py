@@ -35,6 +35,7 @@ from typing import Callable
 
 
 class MainWindow(QMainWindow):
+    openJSONFile = Signal()
     openWadFile = Signal()
     saveAsFile = Signal()
     showLumps = Signal()
@@ -43,9 +44,10 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.ui.actionOpenJSON.triggered.connect(self.openJSONFile)
         self.ui.actionOpenWAD.triggered.connect(self.openWadFile)
         self.ui.actionSaveAs.triggered.connect(self.saveAsFile)
-        self.ui.actionShowLumps.triggered.connect(self.showLumps)
+        self.ui.addGraphic.clicked.connect(self.showLumps)
 
     def updateScale(self, value: int):
         s = value / 100.0

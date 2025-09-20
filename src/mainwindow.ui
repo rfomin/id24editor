@@ -29,20 +29,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="addBigNum">
-            <property name="text">
-             <string>Add Big Num</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="addSmallNum">
-            <property name="text">
-             <string>Add Small Num</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QPushButton" name="removeElem">
             <property name="text">
              <string>Remove</string>
@@ -136,22 +122,16 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionOpenJSON"/>
     <addaction name="actionOpenWAD"/>
     <addaction name="actionSaveAs"/>
    </widget>
-   <widget class="QMenu" name="menuView">
-    <property name="title">
-     <string>View</string>
-    </property>
-    <addaction name="actionShowLumps"/>
-   </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpenWAD">
    <property name="text">
-    <string>Open WAD</string>
+    <string>Add WAD resources</string>
    </property>
   </action>
   <action name="actionSaveAs">
@@ -162,6 +142,11 @@
   <action name="actionShowLumps">
    <property name="text">
     <string>Lumps</string>
+   </property>
+  </action>
+  <action name="actionOpenJSON">
+   <property name="text">
+    <string>Open JSON</string>
    </property>
   </action>
  </widget>
