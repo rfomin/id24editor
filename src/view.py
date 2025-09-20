@@ -258,9 +258,11 @@ def cyanToAlpha(image):
     return image
 
 
-class View:
+class View(QObject):
+    elementRemoved = Signal(dict)
+
     def __init__(self, model):
-        super().__init__()
+        QObject.__init__(self)
         self.model = model
         self.scene = QGraphicsScene()
         self.main_window = MainWindow()
@@ -268,6 +270,19 @@ class View:
         self.lumps_dialog = LumpsDialog(self.main_window)
 
         self.main_window.ui.graphicsView.setScene(self.scene)
+
+        self.main_window.ui.removeElem.setEnabled(False)
+        self.scene.selectionChanged.connect(self.on_selection_changed)
+        self.main_window.ui.removeElem.clicked.connect(self.remove_selected_element)
+
+    def on_selection_changed(self):
+        selected_items = self.scene.selectedItems()
+        self.main_window.ui.removeElem.setEnabled(len(selected_items) > 0)
+
+    def remove_selected_element(self):
+        selected_items = self.scene.selectedItems()
+        if selected_items:
+            self.elementRemoved.emit(selected_items[0].to_dict())
 
     def clear_scene(self):
         for item in self.scene.items():

@@ -202,3 +202,20 @@ class Controller:
         statusbar["children"].append(new_element)
 
         self.draw(self.barindex)
+
+    def remove_element(self, elem_data: dict):
+
+        def find_and_remove(parent, elem_to_remove):
+            if "children" in parent and parent["children"] is not None:
+                for i, child in enumerate(parent["children"]):
+                    elem = next(iter(child.values()))
+                    if elem == elem_to_remove:
+                        del parent["children"][i]
+                        return True
+                    if find_and_remove(elem, elem_to_remove):
+                        return True
+            return False
+
+        find_and_remove(self.model.sbardef["data"]["statusbars"][self.barindex], elem_data)
+
+        self.draw(self.barindex)
