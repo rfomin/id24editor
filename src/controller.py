@@ -31,6 +31,7 @@ class Controller:
         self.view.main_window.openWadFile.connect(self.open_wad_file)
         self.view.main_window.saveAsFile.connect(self.save_as_file)
         self.view.main_window.showLumps.connect(self.show_lumps)
+        self.view.lumps_dialog.lumpSelected.connect(self.add_graphic_element)
 
         self.prop = self.view.main_window.ui.treeProp
         self.prop.setColumnCount(2)
@@ -182,3 +183,22 @@ class Controller:
             model = LumpModel(lumps)
             self.view.lumps_dialog.setModel(model)
         self.view.lumps_dialog.show()
+
+    def add_graphic_element(self, lump_name):
+        new_element = {
+            "graphic": {
+                "x": 0,
+                "y": 0,
+                "patch": lump_name,
+                "alignment": 0,
+                "conditions": None,
+                "children": None
+            }
+        }
+
+        statusbar = self.model.sbardef["data"]["statusbars"][self.barindex]
+        if statusbar["children"] is None:
+            statusbar["children"] = []
+        statusbar["children"].append(new_element)
+
+        self.draw(self.barindex)

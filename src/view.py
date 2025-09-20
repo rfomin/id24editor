@@ -61,6 +61,8 @@ class EditCond(QDialog):
 
 
 class LumpsDialog(QDialog):
+    lumpSelected = Signal(str)
+
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.dlg = Ui_LumpsDialog()
@@ -74,8 +76,19 @@ class LumpsDialog(QDialog):
 
         self.dlg.filterLineEdit.textChanged.connect(self.proxy_model.setFilterRegularExpression)
 
+        self.dlg.pushOK.clicked.connect(self.accept)
+        self.dlg.pushCancel.clicked.connect(self.reject)
+
     def setModel(self, model):
         self.proxy_model.setSourceModel(model)
+
+    def accept(self):
+        selected_indexes = self.dlg.listView.selectedIndexes()
+        if selected_indexes:
+            proxy_index = selected_indexes[0]
+            lump_name = self.proxy_model.data(proxy_index, Qt.DisplayRole)
+            self.lumpSelected.emit(lump_name)
+        super().accept()
 
 
 class LumpItemDelegate(QStyledItemDelegate):
