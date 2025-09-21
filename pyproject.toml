@@ -1,0 +1,23 @@
+[project]
+name = "id24editor"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+    "omgifol",
+    "pillow",
+    "pyside6",
+    "pyside6-addons",
+    "pyside6-essentials",
+]
+
+[tool.pyside6-project]
+files = [
+    "src/controller.py",
+    "src/doomdata.py",
+    "src/editconditions.ui",
+    "src/lumpsdialog.ui",
+    "src/main.py",
+    "src/mainwindow.ui",
+    "src/model.py",
+    "src/view.py"
+]
