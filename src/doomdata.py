@@ -34,6 +34,16 @@ class sbc:
     modenotequal = 17
     hudmodeequal = 18
 
+class sbn:
+    health = 0
+    armor = 1
+    frags = 2
+    ammo = 3
+    ammoselected = 4
+    maxammo = 5
+    weaponammo = 6
+    weaponmaxammo = 7
+
 
 class Weapon:
     fist = 0
@@ -45,7 +55,7 @@ class Weapon:
     bfg = 6
     chainsaw = 7
     supershotgun = 8
-    selected = pistol
+    numweapons = 9
 
 
 class Ammo:
@@ -54,6 +64,7 @@ class Ammo:
     cell = 2  # Plasma rifle, BFG.
     misl = 3  # Missile launcher.
     noammo = 5
+    numammo = 6
 
     weapon = (
         noammo,
@@ -63,7 +74,7 @@ class Ammo:
         misl,
         cell,
         cell,
-        clip,
+        noammo,
         shell,
     )
 

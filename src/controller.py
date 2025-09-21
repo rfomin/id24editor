@@ -1,10 +1,13 @@
 import json
+from typing import Callable
+
 from PySide6.QtWidgets import (
     QComboBox,
     QPushButton,
     QTreeWidgetItem,
     QFileDialog,
     QStyledItemDelegate,
+    QSpinBox,
 )
 from PySide6.QtCore import Qt, Slot, QPointF
 
@@ -84,6 +87,23 @@ class Controller:
         self.cond.insertTopLevelItem(0, item)
         self.cond.setItemWidget(item, 1, combo)
 
+    def populate_spinbox(self, name: str, value: int, callback: Callable):
+        item = QTreeWidgetItem([name, ""])
+        spinbox = QSpinBox()
+        spinbox.setRange(0, 999)
+        spinbox.setValue(value)
+        spinbox.valueChanged.connect(callback)
+        self.cond.insertTopLevelItem(0, item)
+        self.cond.setItemWidget(item, 1, spinbox)
+
+    def update_health(self, value: int):
+        self.model.health = value
+        self.draw_view(self.barindex)
+
+    def update_armor(self, value: int):
+        self.model.armor = value
+        self.draw_view(self.barindex)
+
     def populate_conditions(self):
         index = 0
         index = self.populate_subtree(index, "Ammo", self.model.ammo_items)
@@ -97,6 +117,9 @@ class Controller:
             )
             self.cond.insertTopLevelItem(0, item)
             index += 1
+
+        self.populate_spinbox("Health", self.model.health, self.update_health)
+        self.populate_spinbox("Armor", self.model.armor, self.update_armor)
 
         self.comboWeap = QComboBox()
         self.populate_combo(self.comboWeap, "Selected Weapon", self.model.weapon_items)

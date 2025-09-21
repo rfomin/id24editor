@@ -19,6 +19,8 @@ class SBarModel:
         self.sbardef = None
         self.lumps = None
         self.numberfonts = []
+        self.health = 100
+        self.armor = 0
 
         self.weapon_items = [
             ["First", 1],
@@ -109,7 +111,8 @@ class SBarModel:
                 param = condition["param"]
 
                 if cond == sbc.weaponowned:
-                    result &= self.weapon_items[param][1]
+                    if param >= 0 and param < Weapon.numweapons:
+                        result &= self.weapon_items[param][1]
 
                 elif cond == sbc.weaponselected:
                     result &= self.weapon_selected == param
@@ -118,7 +121,8 @@ class SBarModel:
                     result &= self.weapon_selected != param
 
                 elif cond == sbc.weaponhasammo:
-                    result &= Ammo.weapon[param] != Ammo.noammo
+                    if param >= 0 and param < Weapon.numweapons:
+                        result &= Ammo.weapon[param] != Ammo.noammo
 
                 elif cond == sbc.selectedweaponhasammo:
                     result &= Ammo.weapon[self.weapon_selected] != Ammo.noammo
@@ -176,16 +180,18 @@ class NumberFont:
     def add_percent(self, image):
         self.percent = cyan_to_alpha(image)
 
-    def getPixmap(self, elem: dict, pct: bool):
+    def get_pixmap(self, elem: dict, pct: bool, val: int = 100):
+        val_str = str(val)
         maxlength = int(elem["maxlength"])
-        totalwidth = self.maxwidth * maxlength
+        length = min(maxlength, len(val_str))
+        totalwidth = self.maxwidth * length
 
         if pct is True and self.percent is not None:
             totalwidth += self.percent.width
 
         image = Image.new("RGBA", (totalwidth, self.maxheight))
-        number = self.numbers[0]
-        for i in range(0, maxlength):
+        for i in range(0, length):
+            number = self.numbers[int(val_str[i])]
             image.paste(number, (i * number.width, 0))
 
         if pct is True and self.percent is not None:

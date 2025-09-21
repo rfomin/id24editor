@@ -30,7 +30,7 @@ from ui_mainwindow import Ui_MainWindow
 from ui_editconditions import Ui_Dialog
 from ui_lumpsdialog import Ui_LumpsDialog
 
-from doomdata import SCREENWIDTH, Alignment
+from doomdata import SCREENWIDTH, Alignment, sbn
 
 from typing import Callable
 
@@ -332,9 +332,17 @@ class View(QObject):
         elif type == "number" or type == "percent":
             for font in self.model.numberfonts:
                 if font.name == values["font"]:
+                    numtype = values["type"]
+                    num = 100
+                    if numtype == sbn.health:
+                        num = self.model.health
+                    elif numtype == sbn.armor:
+                        num = self.model.armor
                     pixmap = image_to_pixmap(
-                        font.getPixmap(
-                            values, pct=True if type == "percent" else False
+                        font.get_pixmap(
+                            elem=values,
+                            pct=True if type == "percent" else False,
+                            val=num,
                         )
                     )
                     self.add_to_scene(x, y, values, pixmap)
