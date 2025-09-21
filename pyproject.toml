@@ -21,3 +21,11 @@ files = [
     "src/model.py",
     "src/view.py"
 ]
+
+[tool.pyrefly]
+project-includes = ["**/*"]
+project-excludes = [
+    "**/node_modules",
+    "**/__pycache__",
+    '**/*venv/**\*',
+]
