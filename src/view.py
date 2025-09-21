@@ -114,33 +114,35 @@ class LumpItemDelegate(QStyledItemDelegate):
                 print(f"Could not convert lump {lump_name} to pixmap: {e}")
                 pixmap = None
 
-        # Draw the item
         painter.save()
 
         # Draw background if selected
         if option.state & QStyle.State_Selected:
             painter.fillRect(option.rect, option.palette.highlight())
 
-        # Draw icon
+        # Define cell geometry
+        cell_width = 100
+        image_height = 80
+        text_height = 20
+
+        # Scale and draw icon
         if pixmap:
-            painter.drawPixmap(option.rect.topLeft(), pixmap)
+            scaled_pixmap = pixmap.scaled(cell_width, image_height, Qt.KeepAspectRatio, Qt.FastTransformation)
+            
+            # Center the pixmap
+            x = option.rect.left() + (cell_width - scaled_pixmap.width()) / 2
+            y = option.rect.top() + (image_height - scaled_pixmap.height()) / 2
+            
+            painter.drawPixmap(x, y, scaled_pixmap)
 
         # Draw text
-        if pixmap:
-            text_rect = QRect(option.rect.left(), option.rect.top() + pixmap.height(), option.rect.width(), 20)
-        else:
-            text_rect = option.rect
+        text_rect = QRect(option.rect.left(), option.rect.top() + image_height, cell_width, text_height)
         painter.drawText(text_rect, Qt.AlignCenter, lump_name)
 
         painter.restore()
 
     def sizeHint(self, option, index):
-        source_model = index.model().sourceModel()
-        lump_name = index.data(Qt.DisplayRole)
-
-        lump = source_model.lumps[lump_name]
-        # Add some padding for the name
-        return QSize(max(lump.width + 20, 100), lump.height + 20)
+        return QSize(100, 100)
 
 
 class LumpModel(QAbstractListModel):
