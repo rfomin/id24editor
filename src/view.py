@@ -297,6 +297,9 @@ class View(QObject):
     def draw(self, barindex: int, update: Callable):
         self.clear_scene()
         self.update_properties = update
+        
+        if self.model.sbardef is None:
+            return
 
         statusbar = self.model.sbardef["data"]["statusbars"][barindex]
 

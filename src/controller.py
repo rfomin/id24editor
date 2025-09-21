@@ -61,6 +61,10 @@ class Controller:
     def populate_statusbar_combo(self):
         statusbar_combo = self.view.main_window.ui.comboBox
         statusbar_combo.clear()
+
+        if self.model.sbardef is None:
+            return
+        
         for statusbar in self.model.sbardef["data"]["statusbars"]:
             if statusbar["fullscreenrender"] is True:
                 statusbar_combo.addItem("Fullscreen")
