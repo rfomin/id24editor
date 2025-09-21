@@ -1,6 +1,6 @@
 # id24editor
 
-Alpha version of ID24 SBARDEF v1.0.0 editor
+Unfinished ID24 SBARDEF editor.
 
 ## Setup and Building
 
